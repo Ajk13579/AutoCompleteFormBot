@@ -59,7 +59,10 @@ def complete_form(url: str) -> None:
 
         time.sleep(2)
 
-        formatted_date_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+        if not settings.FORMAT_FOR_SAVING_FILE:
+            formatted_date_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+        else:
+            formatted_date_now = datetime.datetime.now().strftime(settings.FORMAT_FOR_SAVING_FILE)
 
         if not Path(settings.ABSOLUTE_PATH_DIR).exists():
             Path(settings.ABSOLUTE_PATH_DIR).mkdir()

@@ -1,8 +1,11 @@
 import datetime
+from pathlib import Path
 import time
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+
+import settings
 
 
 def complete_form(url: str) -> None:
@@ -58,7 +61,11 @@ def complete_form(url: str) -> None:
 
         formatted_date_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 
-        browser.save_screenshot(f"{formatted_date_now}_{user_id}.png")
+        if not Path(settings.ABSOLUTE_PATH_DIR).exists():
+            Path(settings.ABSOLUTE_PATH_DIR).mkdir()
+
+        browser.save_screenshot(f"{settings.ABSOLUTE_PATH_DIR}/{formatted_date_now}_{user_id}.png")
+
     except Exception as _ex:
         print(_ex)
     finally:

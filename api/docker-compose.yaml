@@ -7,11 +7,26 @@ services:
 
   web-api:
     restart: always
-    build:
-      dockerfile: Dockerfile
-      context: .
+    build: .
     ports:
       - "8000:8000"
+    volumes:
+      - .:/usr/src/app
     env_file:
       - .env
-    command: [ "poetry", "run", "python3", "manage.py", "runserver", "0.0.0.0:8000" ]
+    depends_on:
+      - redis
+    command: [ "python3", "manage.py", "runserver", "0.0.0.0:8000" ]
+#    command: [ "poetry", "run", "python3", "manage.py", "runserver", "0.0.0.0:8000" ]
+
+  worker:
+    restart: always
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/usr/src/app
+    command: ['celery', '-A', 'config', 'worker']
+    depends_on:
+      - web-api
+      - redis

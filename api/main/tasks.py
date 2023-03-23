@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
+from .models import CompletedTaskPicture
 from .services import check_form_availability
 
 
@@ -108,6 +109,11 @@ def fill_in_form_task(
         task = PeriodicTask.objects.get(name=self.request.properties["periodic_task_name"])
         task.enabled = False
         task.save()
+
+        CompletedTaskPicture.objects.create(
+            task_id=self.request.id,
+            path_for_picture=f"screenshots/{formatted_date_now}_{user_id}.png",
+        )
 
     except Exception as _ex:
         # Catch errors and logging

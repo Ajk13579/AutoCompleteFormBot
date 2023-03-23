@@ -110,10 +110,14 @@ def fill_in_form_task(
         task.enabled = False
         task.save()
 
-        CompletedTaskPicture.objects.update_or_create(
+        task_picture = CompletedTaskPicture.objects.get(
             user_id=user_id,
-            path_for_picture=f"screenshots/{formatted_date_now}_{user_id}.png",
         )
+
+        task_picture.path_for_picture = f"screenshots/{formatted_date_now}_{user_id}.png"
+        task_picture.status = 1
+
+        task_picture.save()
 
     except Exception as _ex:
         # Catch errors and logging

@@ -17,7 +17,10 @@ def get_screenshot(request, user_id):
     screenshot = CompletedTaskPicture.objects.filter(user_id=user_id)
 
     if not screenshot:
-        return JsonResponse({'error': 'there is not photo yet'})
+        return JsonResponse({'error': 'There are not screenshots'})
+
+    if screenshot[0].status == '0':
+        return JsonResponse({'error': 'Screenshot preparing...'})
 
     # Making url for a screenshot
     domain = settings.SITE_URL
@@ -67,6 +70,19 @@ class HomeView(View):
             start_time=datetime.datetime.now(),
             enabled=True,
         )
+
+        task_picture = CompletedTaskPicture.objects.filter(
+            user_id=user_id,
+        )
+
+        if not task_picture:
+            CompletedTaskPicture.objects.create(
+                user_id=user_id,
+                status=0,
+            )
+        else:
+            task_picture[0].status = 0
+            task_picture[0].save()
 
         # task = fill_in_form_task.delay(username, lastname, email, phone, birthday, user_id)
         return JsonResponse({'message': 'Periodic task created successfully'})

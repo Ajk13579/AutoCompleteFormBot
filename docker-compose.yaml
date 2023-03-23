@@ -9,13 +9,13 @@ services:
 
   web-api:
     restart: always
-    build: .
+    build: api
     ports:
       - "8000:8000"
     volumes:
-      - .:/usr/src/app
+      - ./api:/usr/src/app
     env_file:
-      - .env
+      - api/.env
     depends_on:
       - redis
     command: [ "python3", "manage.py", "runserver", "0.0.0.0:8000" ]
@@ -25,11 +25,11 @@ services:
 
   worker:
     restart: always
-    build: .
+    build: api
     env_file:
-      - .env
+      - api/.env
     volumes:
-      - .:/usr/src/app
+      - ./api:/usr/src/app
     command: [ 'celery', '-A', 'config', 'worker', '-l', 'INFO' ]
     depends_on:
       - redis
@@ -38,14 +38,25 @@ services:
 
   celery-beats:
     restart: always
-    build: .
+    build: api
     env_file:
-      - .env
+      - api/.env
     volumes:
-      - .:/usr/src/app
+      - ./api:/usr/src/app
     command: [ 'celery', '-A', 'config', 'beat', '-l', 'INFO' ]
     depends_on:
       - redis
+    networks:
+      - network
+
+  bot:
+    restart: always
+    build: bot
+    env_file:
+      - bot/.env
+    volumes:
+      - ./bot:/usr/src/app
+    command: [ 'python3', 'main.py' ]
     networks:
       - network
 

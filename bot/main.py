@@ -84,7 +84,7 @@ def complete_test(message, username, lastname, email, phone, birthday):
 
 
 @bot.message_handler(commands=['get_screenshot'])
-def start(message):
+def get_screenshot(message):
     url = str(settings.SERVICE_SITE_URL)
 
     if url[-1] != '/':
@@ -95,7 +95,7 @@ def start(message):
     response = requests.get(url).json()
 
     if response.get("error", False):
-        bot.send_photo(message.chat.id, response.get("error"))
+        bot.send_message(message.chat.id, response.get("error"))
     else:
         response = requests.get(response.get("screenshot"))
         bot.send_photo(message.chat.id, response.content)
@@ -106,4 +106,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print("Bot started!")
     main()

@@ -1,33 +1,23 @@
 import datetime
 import json
+from json import JSONDecodeError
 
 from django.conf import settings
 from django.http import JsonResponse
 from django.views import View
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
-from django_celery_results.models import TaskResult
 
 from .models import CompletedTaskPicture
 
 
-def get_screenshot(request, task_id):
+def get_screenshot(request, user_id):
     """Returns a screenshot or error"""
 
-    # Take a task result of all tasks
-    task = TaskResult.objects.filter(task_id=task_id)
-
-    # Base cases
-    if not task:
-        return JsonResponse({'error': 'there is not task'})
-
-    if not task[0].status == "SUCCESS":
-        return JsonResponse({'error': 'task is not done yet'})
-
     # Screenshot from database
-    screenshot = CompletedTaskPicture.objects.filter(task_id=task_id)
+    screenshot = CompletedTaskPicture.objects.filter(user_id=user_id)
 
     if not screenshot:
-        return JsonResponse({'error': 'task is not task'})
+        return JsonResponse({'error': 'there is not photo yet'})
 
     # Making url for a screenshot
     domain = settings.SITE_URL
@@ -43,7 +33,10 @@ def get_screenshot(request, task_id):
 class HomeView(View):
     def post(self, request):
         # Making a normal json from b'{}'
-        dictionary = json.loads(request.body.decode("utf-8"))
+        try:
+            dictionary = json.loads(request.body.decode("utf-8"))
+        except JSONDecodeError:
+            dictionary = request.POST
 
         # Getting all parameters
         username = dictionary.get("username")

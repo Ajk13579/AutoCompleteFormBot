@@ -1,3 +1,4 @@
+import requests
 import telebot
 from telebot import types
 
@@ -25,7 +26,7 @@ def fill_username(message):
 
 def fill_lastname(message, username):
     lastname = message.text
-    bot.send_message(message.from_user.id, "Your email? Example: 'example@email.com'")
+    bot.send_message(message.from_user.id, "Your email? Example: 'example@gmail.com'")
     bot.register_next_step_handler(message, fill_email, username, lastname)
 
 
@@ -61,9 +62,43 @@ def complete_test(message, username, lastname, email, phone, birthday):
     remove_buttons = telebot.types.ReplyKeyboardRemove()
 
     if approval.lower() == 'yes':
-        bot.send_message(message.chat.id, "Thanks!", reply_markup=remove_buttons)
+        bot.send_message(
+            message.chat.id,
+            "Thanks! Your request has been accepted!\nTo get an answer write: /get_screenshot",
+            reply_markup=remove_buttons,
+        )
+
+        requests.post(
+            settings.SERVICE_SITE_URL,
+            data={
+                "username": username,
+                "lastname": lastname,
+                "email": email,
+                "phone": phone,
+                "birthday": birthday,
+                "user_id": message.from_user.id,
+            }
+        )
     else:
         bot.send_message(message.chat.id, "You can repeat this by typing: /fill_data!", reply_markup=remove_buttons)
+
+
+@bot.message_handler(commands=['get_screenshot'])
+def start(message):
+    url = str(settings.SERVICE_SITE_URL)
+
+    if url[-1] != '/':
+        url += '/'
+
+    url += 'get-screenshot/' + str(message.from_user.id)
+
+    response = requests.get(url).json()
+
+    if response.get("error", False):
+        bot.send_photo(message.chat.id, response.get("error"))
+    else:
+        response = requests.get(response.get("screenshot"))
+        bot.send_photo(message.chat.id, response.content)
 
 
 def main():

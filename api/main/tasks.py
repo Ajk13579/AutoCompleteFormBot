@@ -94,7 +94,7 @@ def fill_in_form_task(
         complete_form(browser, data)
 
         # Loading the ending screenshot of the page
-        time.sleep(2)
+        time.sleep(4)
 
         # Decide with what format we will create a screenshot
         if not settings.FORMAT_FOR_SAVING_FILE:
@@ -110,8 +110,8 @@ def fill_in_form_task(
         task.enabled = False
         task.save()
 
-        CompletedTaskPicture.objects.create(
-            task_id=self.request.id,
+        CompletedTaskPicture.objects.update_or_create(
+            user_id=user_id,
             path_for_picture=f"screenshots/{formatted_date_now}_{user_id}.png",
         )
 

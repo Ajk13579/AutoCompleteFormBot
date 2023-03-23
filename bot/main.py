@@ -1,84 +1,73 @@
-import datetime
-from pathlib import Path
-import time
-
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+import telebot
+from telebot import types
 
 import settings
 
+bot = telebot.TeleBot(settings.TOKEN)
 
-def complete_form(url: str) -> None:
-    """Fills out the form at a certain specified URL address"""
 
-    username = "username"
-    lastname = "lastname"
-    email = "email@gmail.com"
-    phone = "+93-68-0"
-    birthday = "10.03.2023"
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.from_user.id, "Hey, let's fill out the form together!\nTo continue type: /fill_data")
 
-    user_id = "123123123"
 
-    # Create a driver (browser)
-    browser = webdriver.Chrome()
+@bot.message_handler(commands=['fill_data'])
+def fill_data(message):
+    bot.send_message(message.from_user.id, "Your name? Example: 'sonic'")
+    bot.register_next_step_handler(message, fill_username)
 
-    try:
-        browser.get(url)
 
-        time.sleep(5)
+def fill_username(message):
+    username = message.text
+    bot.send_message(message.from_user.id, "Your lastname? Example: 'speed'")
+    bot.register_next_step_handler(message, fill_lastname, username)
 
-        inputs = browser.find_elements(By.CLASS_NAME, "b24-form-control")
 
-        inputs[0].send_keys(username)
-        inputs[1].send_keys(lastname)
+def fill_lastname(message, username):
+    lastname = message.text
+    bot.send_message(message.from_user.id, "Your email? Example: 'example@email.com'")
+    bot.register_next_step_handler(message, fill_email, username, lastname)
 
-        button = browser.find_element(By.CLASS_NAME, "b24-form-btn")
 
-        button.click()
+def fill_email(message, username, lastname):
+    email = message.text
+    bot.send_message(message.from_user.id, "Your phone number? Example: '+93-23-52'")
+    bot.register_next_step_handler(message, fill_phone, username, lastname, email)
 
-        time.sleep(2)
 
-        inputs = browser.find_elements(By.CLASS_NAME, "b24-form-control")
+def fill_phone(message, username, lastname, email):
+    phone = message.text
+    bot.send_message(message.from_user.id, "Your birthday? Example: '24-12-1976'")
+    bot.register_next_step_handler(message, fill_birthday, username, lastname, email, phone)
 
-        inputs[0].send_keys(email)
-        inputs[1].send_keys(phone)
 
-        button = browser.find_elements(By.CLASS_NAME, "b24-form-btn")
+def fill_birthday(message, username, lastname, email, phone):
+    birthday = message.text
 
-        button[1].click()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
-        time.sleep(2)
+    btn1 = types.KeyboardButton("Yes")
+    btn2 = types.KeyboardButton('No')
 
-        inputs = browser.find_element(By.CLASS_NAME, "b24-form-control")
+    markup.add(btn1, btn2)
 
-        inputs.send_keys(birthday)
+    bot.send_message(message.chat.id, "Did you fill it out correctly?", reply_markup=markup)
+    bot.register_next_step_handler(message, complete_test, username, lastname, email, phone, birthday)
 
-        button = browser.find_elements(By.CLASS_NAME, "b24-form-btn")
 
-        button[1].click()
+def complete_test(message, username, lastname, email, phone, birthday):
+    approval = message.text
 
-        time.sleep(2)
+    remove_buttons = telebot.types.ReplyKeyboardRemove()
 
-        if not settings.FORMAT_FOR_SAVING_FILE:
-            formatted_date_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-        else:
-            formatted_date_now = datetime.datetime.now().strftime(settings.FORMAT_FOR_SAVING_FILE)
-
-        if not Path(settings.ABSOLUTE_PATH_DIR).exists():
-            Path(settings.ABSOLUTE_PATH_DIR).mkdir()
-
-        browser.save_screenshot(f"{settings.ABSOLUTE_PATH_DIR}/{formatted_date_now}_{user_id}.png")
-
-    except Exception as _ex:
-        print(_ex)
-    finally:
-        # Close connection
-        browser.quit()
+    if approval.lower() == 'yes':
+        bot.send_message(message.chat.id, "Thanks!", reply_markup=remove_buttons)
+    else:
+        bot.send_message(message.chat.id, "You can repeat this by typing: /fill_data!", reply_markup=remove_buttons)
 
 
 def main():
-    url = "https://b24-iu5stq.bitrix24.site/backend_test/"
-    complete_form(url)
+    bot.polling(none_stop=True, interval=0)
 
 
 if __name__ == '__main__':

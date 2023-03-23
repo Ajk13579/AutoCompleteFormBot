@@ -7,8 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-selenium = "^4.8.2"
 python-dotenv = "^1.0.0"
+pytelegrambotapi = "^4.10.0"
 
 
 [build-system]

@@ -3,6 +3,7 @@ import time
 
 from celery import shared_task
 from django.conf import settings
+from django_celery_beat.models import PeriodicTask
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -56,8 +57,9 @@ def complete_form(browser, data: dict):
     button[1].click()
 
 
-@shared_task
+@shared_task(bind=True)
 def fill_in_form_task(
+        self,
         username: str,
         lastname: str,
         email: str,
@@ -101,6 +103,11 @@ def fill_in_form_task(
 
         # Take screenshot
         browser.save_screenshot(f"screenshots/{formatted_date_now}_{user_id}.png")
+
+        # Delete task
+        task = PeriodicTask.objects.get(name=self.request.properties["periodic_task_name"])
+        task.enabled = False
+        task.save()
 
     except Exception as _ex:
         # Catch errors and logging

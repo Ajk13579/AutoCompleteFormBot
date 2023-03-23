@@ -22,7 +22,7 @@ class HomeView(View):
 
         now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-        interval = IntervalSchedule.objects.create(every=10, period=IntervalSchedule.SECONDS)
+        interval = IntervalSchedule.objects.get_or_create(every=10, period=IntervalSchedule.SECONDS)
 
         new_celery_task = PeriodicTask.objects.create(
             name=f'Task from {user_id}. Created at {now}',

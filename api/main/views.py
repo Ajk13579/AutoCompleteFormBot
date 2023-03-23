@@ -1,9 +1,9 @@
+import datetime
 import json
 
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.views import View
-
-from .tasks import add
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 
 class HomeView(View):
@@ -16,9 +16,26 @@ class HomeView(View):
         phone = dictionary.get("phone")
         birthday = dictionary.get("birthday")
 
-        print(add.delay(username, lastname, email, phone, birthday))
+        user_id = dictionary.get("user_id")
 
-        return HttpResponse("Working")
+        list_of_args = [username, lastname, email, phone, birthday, user_id]
+
+        now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        interval = IntervalSchedule.objects.create(every=10, period=IntervalSchedule.SECONDS)
+
+        new_celery_task = PeriodicTask.objects.create(
+            name=f'Task from {user_id}. Created at {now}',
+            task='main.tasks.fill_in_form_task',
+            interval=interval,
+            args=json.dumps(list_of_args),
+            start_time=datetime.datetime.now(),
+            enabled=True,
+        )
+
+        # task = fill_in_form_task.delay(username, lastname, email, phone, birthday, user_id)
+
+        return JsonResponse({'message': 'Periodic task created successfully'})
 
     @classmethod
     def as_view(cls, **init_kwargs):

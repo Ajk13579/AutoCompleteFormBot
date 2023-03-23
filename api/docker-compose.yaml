@@ -4,6 +4,8 @@ services:
   redis:
     image: redis:5-alpine
     restart: always
+    networks:
+      - network
 
   web-api:
     restart: always
@@ -12,13 +14,14 @@ services:
       - "8000:8000"
     volumes:
       - .:/usr/src/app
-      - ./db:/usr/src/db
     env_file:
       - .env
     depends_on:
       - redis
     command: [ "python3", "manage.py", "runserver", "0.0.0.0:8000" ]
-  #    command: [ "poetry", "run", "python3", "manage.py", "runserver", "0.0.0.0:8000" ]
+    #    command: [ "poetry", "run", "python3", "manage.py", "runserver", "0.0.0.0:8000" ]
+    networks:
+      - network
 
   worker:
     restart: always
@@ -27,10 +30,11 @@ services:
       - .env
     volumes:
       - .:/usr/src/app
-    command: [ 'celery', '-A', 'config', 'worker' ]
+    command: [ 'celery', '-A', 'config', 'worker', '-l', 'INFO' ]
     depends_on:
-      - web-api
       - redis
+    networks:
+      - network
 
   celery-beats:
     restart: always
@@ -38,8 +42,13 @@ services:
     env_file:
       - .env
     volumes:
-      - ./db:/usr/src/db
-    command: [ 'celery', '-A', 'config', 'beat', '-l', 'INFO', '--scheduler', 'django_celery_beat.schedulers:DatabaseScheduler' ]
+      - .:/usr/src/app
+    command: [ 'celery', '-A', 'config', 'beat', '-l', 'INFO' ]
     depends_on:
-      - web-api
       - redis
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge

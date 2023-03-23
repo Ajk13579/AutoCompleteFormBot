@@ -118,6 +118,7 @@ def fill_in_form_task(
     except Exception as _ex:
         # Catch errors and logging
         print(_ex)
+        return None
     finally:
         # Close connection
         browser.close()

@@ -24,7 +24,10 @@ def get_screenshot(request, task_id):
         return JsonResponse({'error': 'task is not done yet'})
 
     # Screenshot from database
-    screenshot = CompletedTaskPicture.objects.get(task_id=task_id)
+    screenshot = CompletedTaskPicture.objects.filter(task_id=task_id)
+
+    if not screenshot:
+        return JsonResponse({'error': 'task is not task'})
 
     # Making url for a screenshot
     domain = settings.SITE_URL
@@ -32,7 +35,7 @@ def get_screenshot(request, task_id):
     if settings.SITE_URL[-1] != '/':
         domain += '/'
 
-    full_path = domain + screenshot.path_for_picture
+    full_path = domain + screenshot[0].path_for_picture
 
     return JsonResponse({'screenshot': full_path})
 
@@ -49,6 +52,9 @@ class HomeView(View):
         phone = dictionary.get("phone")
         birthday = dictionary.get("birthday")
         user_id = dictionary.get("user_id")
+
+        if not all([username, lastname, email, phone, birthday, user_id]):
+            return JsonResponse({'error': 'invalid data'})
 
         # List for args in PeriodicTask
         list_of_args = [username, lastname, email, phone, birthday, user_id]

@@ -45,6 +45,12 @@ To get a host for the variable `SERVICE_SITE_URL`:
 
 [BotFather](https://t.me/BotFather) for `TOKEN`
 
+### Run:
+
+```
+docker-compose up --build
+```
+
 Example
 --------
 

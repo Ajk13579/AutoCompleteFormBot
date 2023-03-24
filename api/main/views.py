@@ -58,8 +58,8 @@ class HomeView(View):
         # String formatting for better readability
         now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-        # Every, for example, 30 seconds to do Periodic Task
-        interval = IntervalSchedule.objects.get_or_create(every=30, period=IntervalSchedule.SECONDS)
+        # Every, for example, 10 minutes to do Periodic Task
+        interval = IntervalSchedule.objects.get_or_create(every=10, period=IntervalSchedule.MINUTES)
 
         # Create a new task
         new_celery_task = PeriodicTask.objects.create(
